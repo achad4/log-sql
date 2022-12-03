@@ -1,0 +1,11 @@
+[package]
+name = "docker-logs-sql"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+regex = "1.7.0"
+chrono = {version = "0.4", features = ["serde"]}
+rusqlite = { version = "0.28.0" }
+recap = "0.1"
+tokio = { version = "1.22.0", features = ["full"] }
