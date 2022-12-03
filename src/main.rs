@@ -1,9 +1,7 @@
 mod apache_log;
+mod log_reader;
 
 use rusqlite::{params, Connection, Result, NO_PARAMS};
-use std::fs::File;
-use std::io;
-use std::io::BufRead;
 use std::str::FromStr;
 use chrono::{NaiveDateTime};
 use crate::apache_log::ApacheLog;
@@ -71,32 +69,16 @@ fn select_logs(conn: &Connection) -> Result<Vec<ApacheLog>> {
     Ok(apache_logs)
 }
 
-fn main() {
-    // Open the file in read-only mode
-    let file = File::open("logs.txt").unwrap();
-    let conn = Connection::open("logs.db").unwrap();
 
-    // Create a buffered reader from the file
-    let reader = io::BufReader::new(file);
+fn main() {
+
+    let conn = Connection::open("logs.db").unwrap();
     let mut logs :Vec<ApacheLog> = Vec::new();
-    // Iterate over the lines in the file
-    for line in reader.lines() {
-        let line = line.unwrap();
-        println!("{}", line);
-        if !line.trim().is_empty() {
-            let apache_log = ApacheLog::from_str(&line);
-            match apache_log {
-                Ok(_) => logs.push(apache_log.unwrap()),
-                Err(_) => println!("Ignoring line {}", line),
-            }
-        }
-    }
+    log_reader::update_logs("logs.txt", &mut logs);
     create_table(&conn).expect("Create table failed");
     for log in logs {
         insert_log(&conn, &log).unwrap();
     }
-
     println!("{:?}", select_logs(&conn));
-
 
 }
