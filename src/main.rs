@@ -9,6 +9,8 @@ use crate::apache_log::ApacheLog;
 use std::thread;
 use std::time::Duration;
 use std::io;
+use polars::prelude::*;
+use serde_json;
 
 fn main() {
 
@@ -26,11 +28,7 @@ fn main() {
     });
 
     loop {
-        // Print a prompt
-        println!("> ");
-
-        // Flush the output so the prompt is displayed
-        // io::stdout().flush().unwrap();
+        println!("Log SQL > ");
 
         // Read a line of input from the user
         let mut query = String::new();
@@ -38,7 +36,29 @@ fn main() {
 
         // Print the input
         println!("You entered: {}", query);
-        println!("in main thread: {:?}", log_db::select_logs(&outer_conn, &query));
+        let query_result = log_db::select_logs(&outer_conn, &query).expect("Failed to get logs from DB");
+        let json_data = serde_json::to_string(&query_result).unwrap();
+
+        let schema = Schema::from(vec![
+            Field::new("ip_address", DataType::Utf8),
+            Field::new("id", DataType::Utf8),
+            Field::new("username", DataType::Utf8),
+            Field::new("time", DataType::UInt64),
+            Field::new("request", DataType::Utf8),
+            Field::new("resource", DataType::Utf8),
+            Field::new("protocol", DataType::Utf8),
+            Field::new("statuscode", DataType::UInt64),
+            Field::new("size", DataType::UInt64),
+            Field::new("referrer", DataType::Utf8),
+            Field::new("useragent", DataType::Utf8),
+        ].into_iter()
+        );
+
+        let cursor = std::io::Cursor::new(&json_data);
+        let df = JsonReader::new(cursor)
+            .with_schema(&schema)
+            .finish().unwrap();
+        println!("{:?}", df)
     }
 
     // loop {

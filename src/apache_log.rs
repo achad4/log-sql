@@ -3,8 +3,9 @@ use std::str::FromStr;
 use chrono::{NaiveDateTime};
 use recap::lazy_static;
 use recap::Regex;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct ApacheLog {
     pub ip_address: String,
     pub id: String,
