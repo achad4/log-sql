@@ -8,29 +8,43 @@ use chrono::{NaiveDateTime};
 use crate::apache_log::ApacheLog;
 use std::thread;
 use std::time::Duration;
-use std::sync::Arc;
-
+use std::io;
 
 fn main() {
 
     let outer_conn =  Connection::open("logs.db").unwrap();
     log_db::create_table(&outer_conn).expect("Create table failed");
 
-    let handle = thread::spawn(move || {
+    thread::spawn(move || {
         let conn = Connection::open("logs.db").unwrap();
         let mut lines_read = 0;
         loop {
             let l = log_reader::update_logs(&conn, "logs.txt", lines_read);
             lines_read = lines_read + l.unwrap();
-            thread::sleep(Duration::from_secs(1));
+            thread::sleep(Duration::from_secs(5));
         }
     });
-    // log_reader::update_logs("logs.txt", &mut logs);
 
     loop {
-        println!("in main thread: {:?}", log_db::select_logs(&outer_conn));
-        thread::sleep(Duration::from_secs(5));
+        // Print a prompt
+        println!("> ");
+
+        // Flush the output so the prompt is displayed
+        // io::stdout().flush().unwrap();
+
+        // Read a line of input from the user
+        let mut query = String::new();
+        io::stdin().read_line(&mut query).unwrap();
+
+        // Print the input
+        println!("You entered: {}", query);
+        println!("in main thread: {:?}", log_db::select_logs(&outer_conn, &query));
     }
+
+    // loop {
+    //     println!("in main thread: {:?}", log_db::select_logs(&outer_conn));
+    //     thread::sleep(Duration::from_secs(5));
+    // }
 
 
 

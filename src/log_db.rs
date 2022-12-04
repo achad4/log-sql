@@ -44,8 +44,8 @@ pub fn insert_log(conn: &Connection, log: &ApacheLog) -> Result<()> {
     Ok(())
 }
 
-pub fn select_logs(conn: &Connection) -> Result<Vec<ApacheLog>> {
-    let query = "SELECT ip_address, id, username, time, request, resource, protocol, statuscode, size, referrer, useragent FROM apache_logs";
+pub fn select_logs(conn: &Connection, query: &str) -> Result<Vec<ApacheLog>> {
+    // let query = "SELECT ip_address, id, username, time, request, resource, protocol, statuscode, size, referrer, useragent FROM apache_logs";
     let mut statement = conn.prepare(query)?;
     let apache_log_iter = statement
         .query_map(NO_PARAMS, |row| Ok(ApacheLog {
